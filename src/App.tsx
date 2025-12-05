@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { FeatureSection } from './components/FeatureSection';
@@ -6,10 +6,10 @@ import { CozeChat } from './components/CozeChat';
 import { Footer } from './components/Footer';
 
 const App: React.FC = () => {
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  // 修复说明：删除了未使用的 useState 和 isChatOpen 变量
+  // 既然我们选择直接在新标签页打开，就不需要本地状态来控制显示了
 
   const handleStartChat = () => {
-    setIsChatOpen(true);
     // 直接在新标签页打开用户的 Coze 智能体链接
     window.open('https://www.coze.cn/store/agent/7578514424156356608?bot_id=true', '_blank');
   };
