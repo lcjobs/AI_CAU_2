@@ -23,7 +23,6 @@ export const generateMaiXiaojiPPT = async (userType: UserType = 'all') => {
 
   // 辅助函数：根据身份选择主色调
   const getMainColor = () => userType === 'grad' ? CAU_YELLOW : CAU_GREEN;
-  const getLightColor = () => userType === 'grad' ? CAU_LIGHT_YELLOW : CAU_LIGHT_GREEN;
   const THEME_COLOR = getMainColor();
 
   // ------------------------------------------
@@ -117,11 +116,11 @@ export const generateMaiXiaojiPPT = async (userType: UserType = 'all') => {
     slide.addText('本科生专属：综测与保研计算器', { x: 0.5, y: 0.5, fontSize: 24, bold: true, color: CAU_GREEN });
     slide.addText('告别复杂的 Excel 公式，麦小吉帮你算清楚每一分', { x: 0.5, y: 1.2, fontSize: 16, color: TEXT_SUB });
     
-    slide.addShape(pres.ShapeType.roundRect, { x: 1, y: 2, w: 3.5, h: 4, fill: { color: 'F0FDF4' }, line: { color: CAU_GREEN } });
+    slide.addShape(pres.ShapeType.roundRect, { x: 1, y: 2, w: 3.5, h: 4, fill: { color: 'F0FDF4' }, line: { color: CAU_GREEN }, rectRadius: 0.1 });
     slide.addText('学业成绩 (GPA)', { x: 1.2, y: 2.2, fontSize: 18, bold: true, color: CAU_GREEN });
     slide.addText('必修课 + 专选课\n权重占比最大\n麦小吉提示：\n“不要忽视体育课和思政课的绩点！”', { x: 1.2, y: 2.8, w: 3, fontSize: 14, color: TEXT_MAIN });
 
-    slide.addShape(pres.ShapeType.roundRect, { x: 5.5, y: 2, w: 3.5, h: 4, fill: { color: 'FFF7ED' }, line: { color: CAU_YELLOW } });
+    slide.addShape(pres.ShapeType.roundRect, { x: 5.5, y: 2, w: 3.5, h: 4, fill: { color: 'FFF7ED' }, line: { color: CAU_YELLOW }, rectRadius: 0.1 });
     slide.addText('综合素质加分', { x: 5.7, y: 2.2, fontSize: 18, bold: true, color: CAU_YELLOW });
     slide.addText('1. 科技创新 (URP, 学科竞赛)\n2. 社会工作 (学生会, 班委)\n3. 文体活动\n4. 社会实践\n\n麦小吉可以直接回答：\n“我是院学生会部长能加多少分？”', { x: 5.7, y: 2.8, w: 3.2, fontSize: 14, color: TEXT_MAIN });
   }
@@ -143,7 +142,7 @@ export const generateMaiXiaojiPPT = async (userType: UserType = 'all') => {
     ];
 
     boxes.forEach((b, i) => {
-      slide.addShape(pres.ShapeType.roundRect, { x: 1 + i*1.7, y: 2.5, w: 1.4, h: 1.4, fill: { color: b.c }, line: { color: CAU_YELLOW } });
+      slide.addShape(pres.ShapeType.roundRect, { x: 1 + i*1.7, y: 2.5, w: 1.4, h: 1.4, fill: { color: b.c }, line: { color: CAU_YELLOW }, rectRadius: 0.1 });
       slide.addText(b.t, { x: 1 + i*1.7, y: 2.9, w: 1.4, align: 'center', fontSize: 14, bold: true });
       if(i < 4) slide.addShape(pres.ShapeType.rightArrow, { x: 2.45 + i*1.7, y: 3.1, w: 0.2, h: 0.2, fill: { color: TEXT_SUB } });
     });
