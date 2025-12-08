@@ -22,11 +22,6 @@ const App: React.FC = () => {
     window.scrollTo(0, 0); // 切换页面时滚动到顶部
   };
 
-  // 处理直接进入 Coze 的点击（来自 Hero 的按钮）
-  const handleStartDirectChat = () => {
-    window.open('https://www.coze.cn/store/agent/7578514424156356608?bot_id=true', '_blank');
-  };
-
   // 渲染当前页面内容
   const renderContent = () => {
     switch (currentPage) {
