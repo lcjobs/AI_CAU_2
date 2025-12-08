@@ -1,9 +1,25 @@
-import React from 'react';
-import { MessageCircle, GraduationCap, BookOpen, Award, Calendar, Compass } from 'lucide-react';
+import React, { useState } from 'react';
+import { MessageCircle, GraduationCap, BookOpen, Award, Calendar, Compass, Download, Loader2 } from 'lucide-react';
+import { generateMaiXiaojiPPT } from '../utils/pptGenerator';
 
 export const UndergradPage: React.FC = () => {
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const handleStartChat = () => {
     window.open('https://www.coze.cn/store/agent/7578514424156356608?bot_id=true', '_blank');
+  };
+
+  const handleGeneratePPT = async () => {
+    try {
+      setIsGenerating(true);
+      // 调用生成器并传入 'undergrad' 参数
+      await generateMaiXiaojiPPT('undergrad');
+    } catch (error) {
+      console.error("PPT生成失败", error);
+      alert("PPT生成失败，请重试");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const features = [
@@ -42,13 +58,33 @@ export const UndergradPage: React.FC = () => {
             从大一萌新到大四毕业，麦小吉全程陪伴你的农大生活。
             <br/>不仅懂学习，更懂你的校园生活。
           </p>
-          <button
-            onClick={handleStartChat}
-            className="mt-8 bg-white text-green-800 px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:bg-green-50 transition-all transform hover:-translate-y-1 flex items-center mx-auto"
-          >
-            <MessageCircle className="w-5 h-5 mr-2" />
-            立即咨询麦小吉
-          </button>
+          
+          <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+            <button
+              onClick={handleStartChat}
+              className="bg-white text-green-800 px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:bg-green-50 transition-all flex items-center justify-center"
+            >
+              <MessageCircle className="w-5 h-5 mr-2" />
+              立即咨询麦小吉
+            </button>
+            <button
+              onClick={handleGeneratePPT}
+              disabled={isGenerating}
+              className="bg-green-800 bg-opacity-30 border border-green-400 text-white px-8 py-3 rounded-full font-bold text-lg hover:bg-opacity-50 transition-all flex items-center justify-center disabled:opacity-50"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="animate-spin w-5 h-5 mr-2" />
+                  正在生成...
+                </>
+              ) : (
+                <>
+                  <Download className="w-5 h-5 mr-2" />
+                  下载本科介绍 PPT
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 

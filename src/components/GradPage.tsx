@@ -12,7 +12,8 @@ export const GradPage: React.FC = () => {
   const handleGeneratePPT = async () => {
     try {
       setIsGenerating(true);
-      await generateMaiXiaojiPPT();
+      // 调用生成器并传入 'grad' 参数
+      await generateMaiXiaojiPPT('grad');
     } catch (error) {
       console.error("PPT生成失败", error);
       alert("PPT生成失败，请重试");
@@ -78,7 +79,7 @@ export const GradPage: React.FC = () => {
               ) : (
                 <>
                   <Download className="w-5 h-5 mr-2" />
-                  下载详细介绍 PPT
+                  下载科研介绍 PPT
                 </>
               )}
             </button>

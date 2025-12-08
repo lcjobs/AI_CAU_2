@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { BookOpen, Calendar, Award, Search, MonitorPlay, Users, Compass, Download, Loader2 } from 'lucide-react';
-// 动态导入以避免服务端渲染问题，虽然这里是SPA，但保持良好的习惯
 import { generateMaiXiaojiPPT } from '../utils/pptGenerator';
 
 interface FeatureSectionProps {
@@ -16,7 +15,7 @@ export const FeatureSection: React.FC<FeatureSectionProps> = ({ title, descripti
   const handleGeneratePPT = async () => {
     try {
       setIsGenerating(true);
-      await generateMaiXiaojiPPT();
+      await generateMaiXiaojiPPT(type);
     } catch (error) {
       console.error("PPT生成失败", error);
       alert("PPT生成失败，请重试");
@@ -83,28 +82,29 @@ export const FeatureSection: React.FC<FeatureSectionProps> = ({ title, descripti
             {description}
           </p>
           
-          {/* 研究生专属：一键生成PPT按钮 */}
-          {!isUndergrad && (
-            <div className="mt-6 flex justify-center">
-              <button 
-                onClick={handleGeneratePPT}
-                disabled={isGenerating}
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm text-yellow-900 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 transition-all"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                    正在生成演示文稿...
-                  </>
-                ) : (
-                  <>
-                    <Download className="-ml-1 mr-2 h-5 w-5" />
-                    一键下载麦小吉介绍 PPT
-                  </>
-                )}
-              </button>
-            </div>
-          )}
+          <div className="mt-6 flex justify-center">
+            <button 
+              onClick={handleGeneratePPT}
+              disabled={isGenerating}
+              className={`inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 transition-all ${
+                isUndergrad 
+                  ? 'text-green-900 bg-green-100 hover:bg-green-200 focus:ring-green-500' 
+                  : 'text-yellow-900 bg-yellow-100 hover:bg-yellow-200 focus:ring-yellow-500'
+              }`}
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
+                  正在生成...
+                </>
+              ) : (
+                <>
+                  <Download className="-ml-1 mr-2 h-5 w-5" />
+                  {isUndergrad ? '下载本科生指南 PPT' : '下载研究生指南 PPT'}
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="mt-10">
