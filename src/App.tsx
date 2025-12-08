@@ -5,59 +5,90 @@ import { FeatureSection } from './components/FeatureSection';
 import { CozeChat } from './components/CozeChat';
 import { Footer } from './components/Footer';
 import { LoginModal } from './components/LoginModal';
+import { UndergradPage } from './components/UndergradPage';
+import { GradPage } from './components/GradPage';
+import { AboutPage, GuidePage, PrivacyPage } from './components/InfoPages';
+
+// Define available pages
+type PageType = 'home' | 'undergrad' | 'grad' | 'about' | 'guide' | 'privacy';
 
 const App: React.FC = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState<PageType>('home');
 
-  // 处理本科生咨询点击
-  const handleStartUndergradChat = () => {
-    // 可以在这里添加针对本科生的特殊处理逻辑
-    // 如果你有专门针对本科生的 Bot ID，可以在这里替换链接
+  // 页面导航处理
+  const handleNavigate = (page: PageType) => {
+    setCurrentPage(page);
+    window.scrollTo(0, 0); // 切换页面时滚动到顶部
+  };
+
+  // 处理直接进入 Coze 的点击（来自 Hero 的按钮）
+  const handleStartDirectChat = () => {
     window.open('https://www.coze.cn/store/agent/7578514424156356608?bot_id=true', '_blank');
   };
 
-  // 处理研究生咨询点击
-  const handleStartGradChat = () => {
-    // 可以在这里添加针对研究生的特殊处理逻辑
-    // 如果未来创建了独立的研究生 Bot，将下方的链接替换即可
-    window.open('https://www.coze.cn/store/agent/7578514424156356608?bot_id=true', '_blank');
+  // 渲染当前页面内容
+  const renderContent = () => {
+    switch (currentPage) {
+      case 'undergrad':
+        return <UndergradPage />;
+      case 'grad':
+        return <GradPage />;
+      case 'about':
+        return <AboutPage />;
+      case 'guide':
+        return <GuidePage />;
+      case 'privacy':
+        return <PrivacyPage />;
+      case 'home':
+      default:
+        return (
+          <>
+            {/* 首页内容：Hero + Features */}
+            <Hero 
+              onStartUndergradChat={() => handleNavigate('undergrad')} 
+              onStartGradChat={() => handleNavigate('grad')} 
+            />
+            
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-20">
+              <FeatureSection 
+                title="本科新生专属服务" 
+                description="从入学到毕业，麦小吉全程陪伴你的农大生活。"
+                type="undergrad"
+              />
+              
+              <FeatureSection 
+                title="研究生科研助手" 
+                description="文献综述、专利查找、开题答辩，科研路上的得力助手。"
+                type="grad"
+              />
+            </div>
+          </>
+        );
+    }
   };
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 flex flex-col font-sans">
-      {/* 传递登录点击事件 */}
-      <Header onLoginClick={() => setIsLoginModalOpen(true)} />
+      <Header 
+        onLoginClick={() => setIsLoginModalOpen(true)} 
+        onNavigate={(page) => handleNavigate(page as PageType)}
+        currentPage={currentPage}
+      />
       
       <main className="flex-grow">
-        {/* 传递两个不同的入口点击事件 */}
-        <Hero 
-          onStartUndergradChat={handleStartUndergradChat} 
-          onStartGradChat={handleStartGradChat} 
-        />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-20">
-          <FeatureSection 
-            title="本科新生专属服务" 
-            description="从入学到毕业，麦小吉全程陪伴你的农大生活。"
-            type="undergrad"
-          />
-          
-          <FeatureSection 
-            title="研究生科研助手" 
-            description="文献综述、专利查找、开题答辩，科研路上的得力助手。"
-            type="grad"
-          />
-        </div>
+        {renderContent()}
       </main>
 
-      <Footer />
+      <Footer onNavigate={(page) => handleNavigate(page as PageType)} />
       
-      {/* 校园网登录弹窗 */}
+      {/* 校园网登录弹窗 (全局可用) */}
       <LoginModal 
         isOpen={isLoginModalOpen} 
         onClose={() => setIsLoginModalOpen(false)} 
       />
       
+      {/* 右下角悬浮球 (全局可用) */}
       <CozeChat />
     </div>
   );
