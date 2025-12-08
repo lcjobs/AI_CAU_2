@@ -1,5 +1,7 @@
-import React from 'react';
-import { BookOpen, Calendar, Award, Search, MonitorPlay, Users, Compass } from 'lucide-react';
+import React, { useState } from 'react';
+import { BookOpen, Calendar, Award, Search, MonitorPlay, Users, Compass, Download, Loader2 } from 'lucide-react';
+// 动态导入以避免服务端渲染问题，虽然这里是SPA，但保持良好的习惯
+import { generateMaiXiaojiPPT } from '../utils/pptGenerator';
 
 interface FeatureSectionProps {
   title: string;
@@ -9,6 +11,19 @@ interface FeatureSectionProps {
 
 export const FeatureSection: React.FC<FeatureSectionProps> = ({ title, description, type }) => {
   const isUndergrad = type === 'undergrad';
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGeneratePPT = async () => {
+    try {
+      setIsGenerating(true);
+      await generateMaiXiaojiPPT();
+    } catch (error) {
+      console.error("PPT生成失败", error);
+      alert("PPT生成失败，请重试");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const features = isUndergrad
     ? [
@@ -59,7 +74,7 @@ export const FeatureSection: React.FC<FeatureSectionProps> = ({ title, descripti
   return (
     <div id={type} className="py-12 bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="lg:text-center">
+        <div className="lg:text-center relative">
           <h2 className="text-base text-green-600 font-semibold tracking-wide uppercase">{type === 'undergrad' ? '本科生' : '研究生'}</h2>
           <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
             {title}
@@ -67,6 +82,29 @@ export const FeatureSection: React.FC<FeatureSectionProps> = ({ title, descripti
           <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
             {description}
           </p>
+          
+          {/* 研究生专属：一键生成PPT按钮 */}
+          {!isUndergrad && (
+            <div className="mt-6 flex justify-center">
+              <button 
+                onClick={handleGeneratePPT}
+                disabled={isGenerating}
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full shadow-sm text-yellow-900 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 transition-all"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
+                    正在生成演示文稿...
+                  </>
+                ) : (
+                  <>
+                    <Download className="-ml-1 mr-2 h-5 w-5" />
+                    一键下载麦小吉介绍 PPT
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="mt-10">
