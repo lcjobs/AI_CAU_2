@@ -41,7 +41,11 @@ export const generateMaiXiaojiPPT = async () => {
   
   // 标题
   slide.addText('研究生专属：科研加速器', {
-    x: 0.5, y: 0.5, w: '90%', fontSize: 32, bold: true, color: CAU_YELLOW, border: { pt: 0, pb: '2pt', color: CAU_YELLOW }
+    x: 0.5, y: 0.5, w: '90%', fontSize: 32, bold: true, color: CAU_YELLOW
+  });
+  // 使用线条模拟下边框
+  slide.addShape(pres.ShapeType.line, { 
+    x: 0.5, y: 1.1, w: 9, h: 0, line: { color: CAU_YELLOW, width: 2 } 
   });
 
   // 内容卡片 1
@@ -59,7 +63,11 @@ export const generateMaiXiaojiPPT = async () => {
   // ------------------------------------------
   slide = pres.addSlide();
   slide.addText('学术产出与答辩辅助', {
-    x: 0.5, y: 0.5, w: '90%', fontSize: 32, bold: true, color: '1C1917', border: { pt: 0, pb: '2pt', color: '1C1917' }
+    x: 0.5, y: 0.5, w: '90%', fontSize: 32, bold: true, color: '1C1917'
+  });
+  // 使用线条模拟下边框
+  slide.addShape(pres.ShapeType.line, { 
+    x: 0.5, y: 1.1, w: 9, h: 0, line: { color: '1C1917', width: 2 } 
   });
 
   const bulletPoints = [
@@ -82,12 +90,14 @@ export const generateMaiXiaojiPPT = async () => {
   slide.addShape(pres.ShapeType.rect, { x: 1, y: 2, w: 2.5, h: 1.5, fill: { color: '22c55e' } });
   slide.addText('React 19\nFrontend', { x: 1, y: 2, w: 2.5, h: 1.5, align: 'center', color: 'FFFFFF' });
 
-  slide.addShape(pres.ShapeType.arrow, { x: 3.6, y: 2.6, w: 1, h: 0.3, fill: { color: '9ca3af' } });
+  // 修正箭头名称 arrow -> rightArrow
+  slide.addShape(pres.ShapeType.rightArrow, { x: 3.6, y: 2.6, w: 1, h: 0.3, fill: { color: '9ca3af' } });
 
   slide.addShape(pres.ShapeType.rect, { x: 4.8, y: 2, w: 2.5, h: 1.5, fill: { color: '3b82f6' } });
   slide.addText('Coze Agent\nAI Core', { x: 4.8, y: 2, w: 2.5, h: 1.5, align: 'center', color: 'FFFFFF' });
 
-  slide.addShape(pres.ShapeType.arrow, { x: 7.4, y: 2.6, w: 1, h: 0.3, fill: { color: '9ca3af' } });
+  // 修正箭头名称 arrow -> rightArrow
+  slide.addShape(pres.ShapeType.rightArrow, { x: 7.4, y: 2.6, w: 1, h: 0.3, fill: { color: '9ca3af' } });
 
   slide.addShape(pres.ShapeType.rect, { x: 8.6, y: 2, w: 2.5, h: 1.5, fill: { color: '000000' } });
   slide.addText('Vercel\nDeployment', { x: 8.6, y: 2, w: 2.5, h: 1.5, align: 'center', color: 'FFFFFF' });
