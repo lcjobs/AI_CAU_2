@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, ArrowLeft, Send, User, Bot, Loader2, Paperclip, FileText, X, ChevronDown, BrainCircuit } from 'lucide-react';
-import { CozeAPI, RoleType, ChatEventType, ContentType, EnterMessage } from '@coze/api';
+import { CozeAPI, RoleType, ChatEventType, EnterMessage } from '@coze/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -119,14 +119,14 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
         additionalMessages.push({
           role: RoleType.User,
           content: JSON.stringify(multiModalContent),
-          content_type: ContentType.ObjectString, // 使用枚举修复类型错误
+          content_type: 'object_string', // 使用字符串字面量
         });
       } else {
         // 纯文本消息
         additionalMessages.push({
           role: RoleType.User,
           content: userMsg.content,
-          content_type: ContentType.Text, // 使用枚举修复类型错误
+          content_type: 'text', // 使用字符串字面量
         });
       }
 
