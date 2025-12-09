@@ -8,9 +8,10 @@ import { LoginModal } from './components/LoginModal';
 import { UndergradPage } from './components/UndergradPage';
 import { GradPage } from './components/GradPage';
 import { AboutPage, GuidePage, PrivacyPage } from './components/InfoPages';
+import { ChatPage } from './components/ChatPage';
 
 // Define available pages
-type PageType = 'home' | 'undergrad' | 'grad' | 'about' | 'guide' | 'privacy';
+type PageType = 'home' | 'undergrad' | 'grad' | 'about' | 'guide' | 'privacy' | 'chat';
 
 const App: React.FC = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -25,10 +26,12 @@ const App: React.FC = () => {
   // 渲染当前页面内容
   const renderContent = () => {
     switch (currentPage) {
+      case 'chat':
+        return <ChatPage onBack={() => handleNavigate('home')} />;
       case 'undergrad':
-        return <UndergradPage />;
+        return <UndergradPage onNavigateChat={() => handleNavigate('chat')} />;
       case 'grad':
-        return <GradPage />;
+        return <GradPage onNavigateChat={() => handleNavigate('chat')} />;
       case 'about':
         return <AboutPage />;
       case 'guide':
@@ -41,8 +44,7 @@ const App: React.FC = () => {
           <>
             {/* 首页内容：Hero + Features */}
             <Hero 
-              onStartUndergradChat={() => handleNavigate('undergrad')} 
-              onStartGradChat={() => handleNavigate('grad')} 
+              onStartChat={() => handleNavigate('chat')} 
             />
             
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-20">
@@ -75,7 +77,10 @@ const App: React.FC = () => {
         {renderContent()}
       </main>
 
-      <Footer onNavigate={(page) => handleNavigate(page as PageType)} />
+      {/* 只有在非聊天页面才显示 Footer */}
+      {currentPage !== 'chat' && (
+        <Footer onNavigate={(page) => handleNavigate(page as PageType)} />
+      )}
       
       {/* 校园网登录弹窗 (全局可用) */}
       <LoginModal 
@@ -83,8 +88,8 @@ const App: React.FC = () => {
         onClose={() => setIsLoginModalOpen(false)} 
       />
       
-      {/* 右下角悬浮球 (全局可用) */}
-      <CozeChat />
+      {/* 右下角悬浮球：只有在非聊天页面才显示，避免冲突 */}
+      {currentPage !== 'chat' && <CozeChat />}
     </div>
   );
 };

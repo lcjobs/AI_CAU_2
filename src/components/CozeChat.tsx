@@ -33,9 +33,9 @@ export const CozeChat: React.FC = () => {
               },
               auth: {
                 type: 'token',
-                token: 'pat_********', // User needs to replace this
+                token: 'cztei_ljcihtX7X7OqyO8svFCeAc0pmlZuHN8aBmUy66P1sFaq7lG6HvzwDfISfObJSQyML',
                 onRefreshToken: function () {
-                  return 'pat_********';
+                  return 'cztei_ljcihtX7X7OqyO8svFCeAc0pmlZuHN8aBmUy66P1sFaq7lG6HvzwDfISfObJSQyML';
                 }
               },
               ui: {

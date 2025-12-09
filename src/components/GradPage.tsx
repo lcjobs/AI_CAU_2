@@ -2,17 +2,16 @@ import React, { useState } from 'react';
 import { MessageCircle, Microscope, Search, FileText, MonitorPlay, Users, Download, Loader2 } from 'lucide-react';
 import { generateMaiXiaojiPPT } from '../utils/pptGenerator';
 
-export const GradPage: React.FC = () => {
-  const [isGenerating, setIsGenerating] = useState(false);
+interface GradPageProps {
+  onNavigateChat: () => void;
+}
 
-  const handleStartChat = () => {
-    window.open('https://www.coze.cn/store/agent/7578514424156356608?bot_id=true', '_blank');
-  };
+export const GradPage: React.FC<GradPageProps> = ({ onNavigateChat }) => {
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGeneratePPT = async () => {
     try {
       setIsGenerating(true);
-      // 调用生成器并传入 'grad' 参数
       await generateMaiXiaojiPPT('grad');
     } catch (error) {
       console.error("PPT生成失败", error);
@@ -60,7 +59,7 @@ export const GradPage: React.FC = () => {
           </p>
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
             <button
-              onClick={handleStartChat}
+              onClick={onNavigateChat}
               className="bg-white text-yellow-800 px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:bg-yellow-50 transition-all flex items-center justify-center"
             >
               <MessageCircle className="w-5 h-5 mr-2" />

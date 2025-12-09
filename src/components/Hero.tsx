@@ -1,12 +1,11 @@
 import React from 'react';
-import { MessageCircle, GraduationCap, BookOpen, ChevronRight, Microscope, Sparkles } from 'lucide-react';
+import { MessageCircle, GraduationCap, ChevronRight, Microscope, Sparkles, BookOpen } from 'lucide-react';
 
 interface HeroProps {
-  onStartUndergradChat: () => void;
-  onStartGradChat: () => void;
+  onStartChat: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onStartUndergradChat, onStartGradChat }) => {
+export const Hero: React.FC<HeroProps> = ({ onStartChat }) => {
   return (
     <div className="relative bg-white overflow-hidden flex flex-col items-center">
       
@@ -55,7 +54,7 @@ export const Hero: React.FC<HeroProps> = ({ onStartUndergradChat, onStartGradCha
             </div>
             
             <button
-              onClick={onStartUndergradChat}
+              onClick={onStartChat}
               className="w-full py-4 bg-green-700 hover:bg-green-800 text-white rounded-xl font-bold text-lg shadow-lg shadow-green-700/20 hover:shadow-green-700/30 flex items-center justify-center transition-all transform hover:-translate-y-1"
             >
               <MessageCircle className="w-5 h-5 mr-2" />
@@ -93,7 +92,7 @@ export const Hero: React.FC<HeroProps> = ({ onStartUndergradChat, onStartGradCha
             </div>
             
             <button
-              onClick={onStartGradChat}
+              onClick={onStartChat}
               className="w-full py-4 bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-yellow-600/20 hover:shadow-yellow-600/30 flex items-center justify-center transition-all transform hover:-translate-y-1"
             >
               <BookOpen className="w-5 h-5 mr-2" />
