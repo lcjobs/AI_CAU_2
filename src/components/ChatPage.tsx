@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, ArrowLeft, Send, User, Bot, Loader2, Paperclip, FileText, X, ChevronDown, BrainCircuit } from 'lucide-react';
-import { CozeAPI, RoleType, ChatEventType, EnterMessage } from '@coze/api';
+import { Sparkles, ArrowLeft, Send, User, Bot, Loader2, ChevronDown, BrainCircuit } from 'lucide-react';
+import { CozeAPI, RoleType, ChatEventType } from '@coze/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -12,35 +12,25 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   id: string;
-  // 新增：思考过程字段
+  // 思考过程字段
   reasoning?: string; 
-  // 新增：附件信息
-  attachment?: {
-    name: string;
-    type: string;
-  };
 }
 
 export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  // 新增：上传文件状态
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
       role: 'assistant',
-      content: '你好！我是麦小吉，中国农业大学新生专属 AI 助手。\n\n你可以问我：\n- “我是本科新生，综测分怎么算？”\n- “我是研究生，帮我查一下玉米育种的最新文献。”\n\n**新功能**：现在支持上传 PDF 或图片，让我帮你阅读文献或识别截图哦！'
+      content: '你好！我是麦小吉，中国农业大学新生专属 AI 助手。\n\n你可以问我：\n- “我是本科新生，综测分怎么算？”\n- “我是研究生，帮我查一下玉米育种的最新文献。”'
     }
   ]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // 初始化 API 客户端
-  // 注意：Token 包含在前端代码中存在安全风险，建议在生产环境通过后端转发。
   const client = new CozeAPI({
     token: 'cztei_hIfYjhsBOVexNPahSXBY0zpZeNC3Owzm1wJnGVoZN3kb6GSAV40eQLVwfBzkLRV4z',
     baseURL: 'https://api.coze.cn',
@@ -55,86 +45,39 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, messages.length]); // 依赖项增加 messages.length 确保新增消息时滚动
+  }, [messages, messages.length]);
 
-  // 处理文件选择
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    }
-  };
-
-  // 处理文件上传并发送
   const handleSend = async () => {
-    if ((!input.trim() && !selectedFile) || isLoading || isUploading) return;
+    if (!input.trim() || isLoading) return;
 
     setIsLoading(true);
-    let uploadedFileId = '';
 
-    // 1. 如果有文件，先上传文件
-    if (selectedFile) {
-      setIsUploading(true);
-      try {
-        const fileRes = await client.files.upload({
-          file: selectedFile,
-        });
-        uploadedFileId = fileRes.id;
-      } catch (error) {
-        console.error("File upload failed:", error);
-        alert("文件上传失败，请重试");
-        setIsLoading(false);
-        setIsUploading(false);
-        return;
-      }
-      setIsUploading(false);
-    }
-
-    // 2. 构造用户消息
+    // 1. 构造用户消息
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: input,
-      attachment: selectedFile ? { name: selectedFile.name, type: selectedFile.type } : undefined
     };
 
     setMessages(prev => [...prev, userMsg]);
     setInput('');
-    setSelectedFile(null); // 清空文件选择
 
     try {
-      // 3. 构造 AI 预占位消息
+      // 2. 构造 AI 预占位消息
       const botMsgId = (Date.now() + 1).toString();
       setMessages(prev => [...prev, { id: botMsgId, role: 'assistant', content: '', reasoning: '' }]);
 
-      // 4. 准备发送给 Coze 的内容
-      let additionalMessages: EnterMessage[] = [];
-
-      if (uploadedFileId) {
-        // 多模态消息构造 (Object String 格式)
-        const multiModalContent = [
-          { type: 'text', text: userMsg.content || "请分析这个文件" },
-          { type: 'file', file_id: uploadedFileId }
-        ];
-        
-        additionalMessages.push({
-          role: RoleType.User,
-          content: JSON.stringify(multiModalContent),
-          content_type: 'object_string' as const, // 明确使用 'object_string'
-        });
-      } else {
-        // 纯文本消息
-        additionalMessages.push({
-          role: RoleType.User,
-          content: userMsg.content,
-          content_type: 'text' as const, // 明确使用 'text'
-        });
-      }
-
-      // 5. 调用流式接口
+      // 3. 调用流式接口
       const stream = await client.chat.stream({
         bot_id: BOT_ID,
         user_id: 'user_' + Date.now(),
-        additional_messages: additionalMessages,
+        additional_messages: [
+          {
+            role: RoleType.User,
+            content: userMsg.content,
+            content_type: 'text' as const, // 明确使用文本类型
+          }
+        ],
       });
 
       let fullContent = '';
@@ -146,8 +89,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
           if (part.data?.content) {
             fullContent += part.data.content;
           }
-          // 处理深度思考/推理内容 (如果模型支持)
-          // 注意：不同模型返回字段可能不同，这里兼容 reasoning_content
+          // 处理深度思考/推理内容
           if ((part.data as any)?.reasoning_content) {
              fullReasoning += (part.data as any).reasoning_content;
           }
@@ -160,7 +102,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
               newMessages[lastMsgIndex] = {
                 ...newMessages[lastMsgIndex],
                 content: fullContent,
-                reasoning: fullReasoning || newMessages[lastMsgIndex].reasoning // 保留之前的思考，或者更新
+                reasoning: fullReasoning || newMessages[lastMsgIndex].reasoning
               };
             }
             return newMessages;
@@ -204,7 +146,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
             <h1 className="font-bold text-stone-900">麦小吉 AI 助手</h1>
             <p className="text-xs text-green-600 flex items-center">
               <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
-              在线 | 支持文件上传
+              在线
             </p>
           </div>
         </div>
@@ -230,16 +172,6 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
                 {/* 气泡内容 */}
                 <div className="flex flex-col gap-2">
                   
-                  {/* 用户附件显示 */}
-                  {msg.attachment && (
-                     <div className={`flex items-center p-2 rounded-lg text-sm mb-1 ${
-                        msg.role === 'user' ? 'bg-green-800 text-green-100' : 'bg-stone-100'
-                     }`}>
-                        <Paperclip size={14} className="mr-2" />
-                        <span className="truncate max-w-[150px]">{msg.attachment.name}</span>
-                     </div>
-                  )}
-
                   {/* 深度思考过程 (仅机器人) */}
                   {msg.role === 'assistant' && msg.reasoning && (
                     <details className="mb-2 group" open={isLoading}> {/* 加载时默认展开，完成后折叠 */}
@@ -298,43 +230,15 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
       <div className="bg-white border-t border-stone-200 p-4 pb-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="max-w-4xl mx-auto relative">
           
-          {/* 文件预览条 */}
-          {selectedFile && (
-            <div className="absolute -top-12 left-0 right-0 flex items-center bg-stone-50 border border-stone-200 rounded-t-lg px-3 py-2 animate-in slide-in-from-bottom-2">
-              <FileText className="w-4 h-4 text-green-600 mr-2" />
-              <span className="text-sm text-stone-700 truncate flex-1">{selectedFile.name}</span>
-              <button onClick={() => setSelectedFile(null)} className="text-stone-400 hover:text-red-500">
-                <X size={16} />
-              </button>
-            </div>
-          )}
-
           {/* 输入框主体 */}
-          <div className={`relative flex items-end border border-stone-300 rounded-2xl bg-stone-50 focus-within:ring-2 focus-within:ring-green-500/50 focus-within:border-green-500 transition-all ${selectedFile ? 'rounded-tl-none rounded-tr-none' : ''}`}>
+          <div className="relative flex items-end border border-stone-300 rounded-2xl bg-stone-50 focus-within:ring-2 focus-within:ring-green-500/50 focus-within:border-green-500 transition-all">
             
-            {/* 上传按钮 */}
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              onChange={handleFileSelect}
-              accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-            />
-            <button 
-              onClick={() => fileInputRef.current?.click()}
-              className="p-3 ml-1 text-stone-400 hover:text-green-700 transition-colors"
-              title="上传文件"
-              disabled={isLoading}
-            >
-              <Paperclip size={20} />
-            </button>
-
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder={selectedFile ? "请输入关于该文件的问题..." : "请输入您的问题... (支持上传文档)"}
-              className="w-full bg-transparent border-none focus:ring-0 py-3 px-2 resize-none max-h-32 min-h-[48px] text-stone-800 placeholder:text-stone-400"
+              placeholder="请输入您的问题..."
+              className="w-full bg-transparent border-none focus:ring-0 py-3 px-4 resize-none max-h-32 min-h-[48px] text-stone-800 placeholder:text-stone-400"
               rows={1}
               disabled={isLoading}
               style={{ minHeight: '48px' }}
@@ -342,9 +246,9 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
             
             <button
               onClick={handleSend}
-              disabled={(!input.trim() && !selectedFile) || isLoading}
+              disabled={!input.trim() || isLoading}
               className={`m-1.5 p-2.5 rounded-xl transition-all flex items-center justify-center ${
-                (!input.trim() && !selectedFile) || isLoading
+                !input.trim() || isLoading
                   ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
                   : 'bg-green-700 text-white hover:bg-green-800 shadow-md hover:shadow-lg'
               }`}
@@ -354,7 +258,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
           </div>
         </div>
         <p className="text-center text-xs text-stone-400 mt-2">
-          支持 PDF、Word、图片分析。内容由 AI 生成，仅供参考。
+          内容由 AI 生成，仅供参考。
         </p>
       </div>
     </div>
