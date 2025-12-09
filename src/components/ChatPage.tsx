@@ -18,13 +18,13 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
   useEffect(() => {
     if (isInitialized.current) return;
     
-    // 清理之前的 SDK 实例（如果有）以防止重复
-    const existingContainer = document.getElementById('coze-chat-container');
-    if (existingContainer) {
-      existingContainer.innerHTML = '';
+    // 清理之前的 SDK 实例或容器内容
+    if (containerRef.current) {
+      containerRef.current.innerHTML = '';
     }
 
-    const scriptUrl = "https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/1.2.0-beta.19/libs/cn/index.js";
+    // 使用您提供的新的 SDK 地址 (builder-web-sdk)
+    const scriptUrl = "https://lf-cdn.coze.cn/obj/unpkg/flow-platform/builder-web-sdk/0.1.1-beta.1/dist/umd/index.js";
     
     const script = document.createElement('script');
     script.src = scriptUrl;
@@ -33,67 +33,54 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
     script.onload = () => {
       if (window.CozeWebSDK && containerRef.current) {
         try {
-          // 初始化 WebChatClient，使用用户提供的具体配置
-          new window.CozeWebSDK.WebChatClient({
-            config: {
-              type: 'bot',
-              bot_id: '7578514424156356608', // 用户提供的 Bot ID
-              isIframe: false,
-            },
-            auth: {
-              type: 'token',
-              token: 'cztei_ljcihtX7X7OqyO8svFCeAc0pmlZuHN8aBmUy66P1sFaq7lG6HvzwDfISfObJSQyML', // 用户提供的 Token
-              onRefreshToken: async () => 'cztei_ljcihtX7X7OqyO8svFCeAc0pmlZuHN8aBmUy66P1sFaq7lG6HvzwDfISfObJSQyML'
-            },
+          console.log("Initializing Coze AppWebSDK...");
+          
+          // 使用 AppWebSDK 初始化
+          new window.CozeWebSDK.AppWebSDK({
+            // 使用您提供的鉴权 Token (cztei_...)
+            token: 'cztei_lmTlxZEx2TwnAH2PZnOQ0WCm6LvXcke0TOMl9LGiZJ5mNKyAMn2eU8jf5H1xKfk4G',
+            
+            // 注意：您提供的代码中 appId 为空。
+            // 对于智能体 (Bot)，通常使用 botId。我填入了您之前的 Bot ID。
+            // 如果这是一个 Coze App，请替换为 appId。
+            botId: '7578514424156356608', 
+            // appId: '', 
+            
+            // 将 SDK 挂载到当前的 React ref 节点上
+            container: containerRef.current,
+            
             userInfo: {
               id: 'user',
               url: 'https://lf-coze-web-cdn.coze.cn/obj/eden-cn/lm-lgvj/ljhwZthlaukjlkulzlp/coze/coze-logo.png',
               nickname: '同学',
             },
             ui: {
-              base: {
-                icon: 'https://lf-coze-web-cdn.coze.cn/obj/eden-cn/lm-lgvj/ljhwZthlaukjlkulzlp/coze/chatsdk-logo.png',
-                layout: 'pc',
-                lang: 'zh-CN',
-                zIndex: 1000
-              },
-              header: {
-                isShow: false, // 我们自己实现了头部，所以隐藏 SDK 自带的
-                isNeedClose: false,
-              },
-              asstBtn: {
-                isNeed: false // 隐藏右下角悬浮球，因为这是专用聊天页
-              },
-              footer: {
-                isShow: true,
-                expressionText: 'Powered by Coze & CAU',
-              },
-              chatBot: {
-                title: '麦小吉 - CAU小助手',
-                uploadable: true,
-                width: '100%', // 宽度自适应容器
-                el: containerRef.current, // 关键：将聊天框挂载到我们的 div 上
-              },
-            },
+              className: 'h-full w-full', // 强制占满容器
+            }
           });
+          
           isInitialized.current = true;
         } catch (err) {
-          console.error("Coze SDK Init Error:", err);
+          console.error("Coze SDK Initialization Error:", err);
         }
       }
+    };
+
+    script.onerror = () => {
+      console.warn("Failed to load Coze SDK");
     };
 
     document.body.appendChild(script);
 
     return () => {
-      // Cleanup handled by ref check
+      // Cleanup usually handled by removing the script or component unmounting
     };
   }, []);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-stone-50">
-      {/* 顶部导航条 */}
-      <div className="bg-white border-b border-stone-200 px-4 py-3 flex items-center shadow-sm flex-shrink-0">
+    <div className="flex flex-col h-screen bg-stone-50 overflow-hidden">
+      {/* 顶部导航条 - 保持简易导航功能 */}
+      <div className="bg-white border-b border-stone-200 px-4 py-3 flex items-center shadow-sm flex-shrink-0 z-50">
         <button 
           onClick={onBack}
           className="mr-4 p-2 rounded-full hover:bg-stone-100 text-stone-600 transition-colors"
@@ -106,26 +93,22 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
           </div>
           <div>
             <h1 className="font-bold text-stone-900">麦小吉 AI 助手</h1>
-            <p className="text-xs text-green-600 flex items-center">
-              <span className="w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
-              在线 - 随时解答你的疑问
-            </p>
           </div>
         </div>
       </div>
 
-      {/* 聊天容器 */}
-      <div className="flex-grow p-4 md:p-6 overflow-hidden flex justify-center">
+      {/* 聊天主容器 */}
+      {/* 设置 flex-grow 确保占满剩余高度 */}
+      <div className="flex-grow w-full relative bg-white">
         <div 
-          id="coze-chat-container" 
           ref={containerRef}
-          className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden border border-stone-200 h-full"
+          className="absolute inset-0 w-full h-full"
         >
-          {/* Coze SDK 将会被注入到这里 */}
+          {/* SDK 会被渲染到这里 */}
           <div className="flex items-center justify-center h-full text-stone-400">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700 mx-auto mb-4"></div>
-              <p>正在连接麦小吉大脑...</p>
+              <p>正在加载对话界面...</p>
             </div>
           </div>
         </div>
