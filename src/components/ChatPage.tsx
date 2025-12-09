@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, ArrowLeft, Send, User, Bot, Loader2, Paperclip, FileText, X, ChevronDown, BrainCircuit } from 'lucide-react';
-import { CozeAPI, RoleType, ChatEventType } from '@coze/api';
+import { CozeAPI, RoleType, ChatEventType, ContentType, EnterMessage } from '@coze/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -107,7 +107,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
       setMessages(prev => [...prev, { id: botMsgId, role: 'assistant', content: '', reasoning: '' }]);
 
       // 4. 准备发送给 Coze 的内容
-      let additionalMessages = [];
+      let additionalMessages: EnterMessage[] = [];
 
       if (uploadedFileId) {
         // 多模态消息构造 (Object String 格式)
@@ -119,14 +119,14 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
         additionalMessages.push({
           role: RoleType.User,
           content: JSON.stringify(multiModalContent),
-          content_type: 'object_string', // 关键：指定为对象字符串
+          content_type: ContentType.ObjectString, // 使用枚举修复类型错误
         });
       } else {
         // 纯文本消息
         additionalMessages.push({
           role: RoleType.User,
           content: userMsg.content,
-          content_type: 'text',
+          content_type: ContentType.Text, // 使用枚举修复类型错误
         });
       }
 
