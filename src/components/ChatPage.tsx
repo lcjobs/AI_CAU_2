@@ -28,6 +28,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // 初始化 API 客户端
+  // 使用您提供的最新 Token
   const client = new CozeAPI({
     token: 'cztei_hIfYjhsBOVexNPahSXBY0zpZeNC3Owzm1wJnGVoZN3kb6GSAV40eQLVwfBzkLRV4z', 
     baseURL: 'https://api.coze.cn',
@@ -42,7 +43,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, messages.length]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -62,17 +63,17 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
       const botMsgId = (Date.now() + 1).toString();
       setMessages(prev => [...prev, { id: botMsgId, role: 'assistant', content: '' }]);
 
-      // 核心修改：使用 as any 绕过 TypeScript 检查，直接使用字符串常量
-      // 并添加 auto_save_history
+      // 调用 Coze API
+      // 使用 as any 强制类型转换，解决 TS 构建报错
       const stream = await client.chat.stream({
         bot_id: BOT_ID,
-        user_id: 'user_' + Date.now(),
-        auto_save_history: true,
+        user_id: 'user_' + Date.now(), // 生成一个随机用户ID
         additional_messages: [
           {
             role: 'user' as any,
             content: userMsg.content,
             content_type: 'text' as any,
+            type: 'question' as any // 按照您的示例添加 type 字段
           },
         ],
       });
@@ -83,33 +84,54 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
         // 调试日志：查看真实返回的事件类型
         console.log('Stream Event:', part.event, part.data);
 
-        // 核心修改：直接判断字符串，不依赖 ChatEventType 枚举
+        // 处理消息增量事件
         if (part.event === 'conversation.message.delta') {
           const content = part.data?.content || '';
           fullContent += content;
           
           setMessages(prev => {
             const newMessages = [...prev];
-            const lastMsg = newMessages[newMessages.length - 1];
-            if (lastMsg.id === botMsgId) {
-              lastMsg.content = fullContent;
+            const index = newMessages.findIndex(m => m.id === botMsgId);
+            if (index !== -1) {
+              newMessages[index] = {
+                ...newMessages[index],
+                content: fullContent
+              };
             }
             return newMessages;
           });
+        }
+        // 处理对话完成事件（以防 delta 丢失）
+        if (part.event === 'conversation.message.completed') {
+           const content = part.data?.content || '';
+           if (content && content.length > fullContent.length) {
+              fullContent = content;
+              setMessages(prev => {
+                const newMessages = [...prev];
+                const index = newMessages.findIndex(m => m.id === botMsgId);
+                if (index !== -1) {
+                  newMessages[index] = {
+                    ...newMessages[index],
+                    content: fullContent
+                  };
+                }
+                return newMessages;
+              });
+           }
         }
       }
     } catch (error) {
       console.error('Chat error:', error);
       setMessages(prev => {
         const newMessages = [...prev];
-        // 移除那个还在加载的空消息
-        if (newMessages[newMessages.length - 1].content === '') {
+        // 如果最后一条消息是空的（还在加载），移除它
+        if (newMessages.length > 0 && newMessages[newMessages.length - 1].content === '') {
             newMessages.pop();
         }
         return [...newMessages, { 
             id: Date.now().toString(), 
             role: 'assistant', 
-            content: `⚠️ 连接错误: ${error instanceof Error ? error.message : '未知错误'}` 
+            content: `⚠️ 连接错误: ${error instanceof Error ? error.message : '未知错误'}\n\n请检查您的网络连接或 Token 是否有效。` 
         }];
       });
     } finally {
@@ -219,7 +241,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
           </button>
         </div>
         <p className="text-center text-xs text-stone-400 mt-2">
-          内容由 AI 生成，仅供参考。重要事项请以学校教务处官网为准。
+          内容由 AI 生成，仅供参考。
         </p>
       </div>
     </div>
