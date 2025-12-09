@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, ArrowLeft, Send, User, Bot, Loader2, ChevronDown, BrainCircuit } from 'lucide-react';
-import { CozeAPI, RoleType, ChatEventType } from '@coze/api';
+import { CozeAPI } from '@coze/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -12,7 +12,6 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   id: string;
-  // 思考过程字段
   reasoning?: string; 
 }
 
@@ -32,6 +31,7 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
   
   // 初始化 API 客户端
   const client = new CozeAPI({
+    // 使用用户提供的最新 Token
     token: 'cztei_hIfYjhsBOVexNPahSXBY0zpZeNC3Owzm1wJnGVoZN3kb6GSAV40eQLVwfBzkLRV4z',
     baseURL: 'https://api.coze.cn',
     allowPersonalAccessTokenInBrowser: true
@@ -68,23 +68,29 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
       setMessages(prev => [...prev, { id: botMsgId, role: 'assistant', content: '', reasoning: '' }]);
 
       // 3. 调用流式接口
+      // 关键修改：添加 auto_save_history，并使用字符串字面量代替 Enum
       const stream = await client.chat.stream({
         bot_id: BOT_ID,
         user_id: 'user_' + Date.now(),
+        auto_save_history: true,
         additional_messages: [
           {
-            role: RoleType.User,
+            role: 'user',
             content: userMsg.content,
-            content_type: 'text' as const, // 明确使用文本类型
+            content_type: 'text',
           }
         ],
       });
 
       let fullContent = '';
       let fullReasoning = '';
+      let hasReceivedData = false;
 
       for await (const part of stream) {
-        if (part.event === ChatEventType.CONVERSATION_MESSAGE_DELTA) {
+        // 关键修改：直接判断字符串事件名，避免 Enum 兼容性问题
+        if (part.event === 'conversation.message.delta') {
+          hasReceivedData = true;
+          
           // 处理普通文本回复
           if (part.data?.content) {
             fullContent += part.data.content;
@@ -107,15 +113,44 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
             }
             return newMessages;
           });
+        } else if (part.event === 'conversation.chat.failed') {
+            console.error('Chat failed event:', part.data);
+            throw new Error((part.data as any)?.last_error?.msg || 'Unknown error');
         }
       }
-    } catch (error) {
-      console.error('Chat error:', error);
-      setMessages(prev => [...prev, { 
-        id: Date.now().toString(), 
-        role: 'assistant', 
-        content: '⚠️ 抱歉，连接麦小吉大脑时出现错误，可能是网络问题或 Token 过期。' 
-      }]);
+
+      if (!hasReceivedData && !fullContent) {
+          // 如果流结束了但没有收到任何 delta 消息
+          console.warn('Stream ended without data');
+      }
+
+    } catch (error: any) {
+      console.error('Chat error details:', error);
+      
+      let errorMessage = '⚠️ 连接失败。';
+      if (error?.message?.includes('401')) {
+          errorMessage = '⚠️ 鉴权失败 (401)：Token 可能已过期或无效。请检查您的 Coze API Token。';
+      } else if (error?.message?.includes('403')) {
+          errorMessage = '⚠️ 权限不足 (403)：请确保您的 Token 有权限访问该 Bot。';
+      } else {
+          errorMessage = `⚠️ 发生错误: ${error?.message || '未知错误'}`;
+      }
+
+      setMessages(prev => {
+          // 移除那个空白的占位消息，或者替换为错误消息
+          const newMessages = [...prev];
+          const lastMsg = newMessages[newMessages.length - 1];
+          if (lastMsg.role === 'assistant' && !lastMsg.content) {
+              lastMsg.content = errorMessage;
+          } else {
+              newMessages.push({
+                  id: Date.now().toString(),
+                  role: 'assistant',
+                  content: errorMessage
+              });
+          }
+          return newMessages;
+      });
     } finally {
       setIsLoading(false);
     }
