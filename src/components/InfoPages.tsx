@@ -1,5 +1,6 @@
 import React from 'react';
 import { Shield, Book, Info } from 'lucide-react';
+import { WorkflowDiagram } from './WorkflowDiagram';
 
 export const AboutPage: React.FC = () => (
   <div className="max-w-4xl mx-auto px-4 py-16 animate-in fade-in">
@@ -8,10 +9,18 @@ export const AboutPage: React.FC = () => (
         <Info className="w-10 h-10 text-green-700" />
       </div>
       <h1 className="text-3xl font-bold text-stone-900">关于麦小吉</h1>
+      <p className="mt-4 text-stone-600 max-w-2xl mx-auto">
+        麦小吉是专为中国农业大学学子打造的垂直领域智能体，集成了先进的大语言模型技术与校园本地知识库。
+      </p>
     </div>
+
+    {/* Workflow Diagram Section */}
+    <WorkflowDiagram />
+
     <div className="prose prose-stone mx-auto bg-white p-8 rounded-2xl shadow-sm border border-stone-100">
+      <h3 className="text-xl font-bold mb-4 text-green-800">我们的愿景</h3>
       <p className="text-lg leading-relaxed mb-6">
-        <strong>“麦小吉”</strong> 是一款专为中国农业大学（CAU）新生研发的生成式 AI 智能体。我们的名字取自“麦浪”与“吉祥”，寓意在农大的沃土上收获知识与希望。
+        <strong>“麦小吉”</strong> 取自“麦浪”与“吉祥”，寓意在农大的沃土上收获知识与希望。
       </p>
       <p className="mb-4">
         本项目由热爱技术的农大校友团队开发，旨在利用最前沿的大模型技术（LLM），打破信息壁垒，解决新生入学时的“迷茫”与研究生科研起步时的“焦虑”。
@@ -19,7 +28,6 @@ export const AboutPage: React.FC = () => (
       <p className="mb-4">
         我们的核心能力构建在 Coze 扣子平台之上，结合 React 现代化前端技术，为您提供流畅、智能、定制化的网页体验。
       </p>
-      <h3 className="text-xl font-bold mt-8 mb-4 text-green-800">我们的愿景</h3>
       <p>做最懂农大人的 AI 伙伴，让每一位 CAUer 的求学之路不再孤单。</p>
     </div>
   </div>
