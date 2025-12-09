@@ -119,14 +119,14 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
         additionalMessages.push({
           role: RoleType.User,
           content: JSON.stringify(multiModalContent),
-          content_type: 'object_string', // 使用字符串字面量
+          content_type: 'object_string' as const, // 明确使用 'object_string'
         });
       } else {
         // 纯文本消息
         additionalMessages.push({
           role: RoleType.User,
           content: userMsg.content,
-          content_type: 'text', // 使用字符串字面量
+          content_type: 'text' as const, // 明确使用 'text'
         });
       }
 
