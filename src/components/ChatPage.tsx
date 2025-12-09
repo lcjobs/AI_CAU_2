@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, ArrowLeft, Send, User, Bot, Loader2 } from 'lucide-react';
-import { CozeAPI, RoleType, ChatEventType } from '@coze/api';
+import { CozeAPI } from '@coze/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -28,17 +28,14 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // 初始化 API 客户端
-  // 注意：在前端直接暴露 Token 有风险，生产环境建议通过后端代理。
-  // 但为了满足您的本地/演示需求，直接在此配置。
   const client = new CozeAPI({
-    token: 'cztei_hIfYjhsBOVexNPahSXBY0zpZeNC3Owzm1wJnGVoZN3kb6GSAV40eQLVwfBzkLRV4z', // 您提供的最新 API Token
+    token: 'cztei_hIfYjhsBOVexNPahSXBY0zpZeNC3Owzm1wJnGVoZN3kb6GSAV40eQLVwfBzkLRV4z', 
     baseURL: 'https://api.coze.cn',
-    allowPersonalAccessTokenInBrowser: true // 允许在浏览器环境使用 PAT
+    allowPersonalAccessTokenInBrowser: true 
   });
 
-  const BOT_ID = '7578514424156356608'; // 您提供的 Bot ID
+  const BOT_ID = '7578514424156356608'; 
 
-  // 自动滚动到底部
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -65,14 +62,17 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
       const botMsgId = (Date.now() + 1).toString();
       setMessages(prev => [...prev, { id: botMsgId, role: 'assistant', content: '' }]);
 
+      // 核心修改：使用 as any 绕过 TypeScript 检查，直接使用字符串常量
+      // 并添加 auto_save_history
       const stream = await client.chat.stream({
         bot_id: BOT_ID,
-        user_id: 'user_123456', // 模拟用户ID
+        user_id: 'user_' + Date.now(),
+        auto_save_history: true,
         additional_messages: [
           {
-            role: RoleType.User,
+            role: 'user' as any,
             content: userMsg.content,
-            content_type: 'text',
+            content_type: 'text' as any,
           },
         ],
       });
@@ -80,11 +80,14 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
       let fullContent = '';
 
       for await (const part of stream) {
-        if (part.event === ChatEventType.CONVERSATION_MESSAGE_DELTA) {
+        // 调试日志：查看真实返回的事件类型
+        console.log('Stream Event:', part.event, part.data);
+
+        // 核心修改：直接判断字符串，不依赖 ChatEventType 枚举
+        if (part.event === 'conversation.message.delta') {
           const content = part.data?.content || '';
           fullContent += content;
           
-          // 实时更新最后一条消息
           setMessages(prev => {
             const newMessages = [...prev];
             const lastMsg = newMessages[newMessages.length - 1];
@@ -97,11 +100,18 @@ export const ChatPage: React.FC<ChatPageProps> = ({ onBack }) => {
       }
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages(prev => [...prev, { 
-        id: Date.now().toString(), 
-        role: 'assistant', 
-        content: '⚠️ 抱歉，连接麦小吉大脑时出现错误，请检查网络或 Token 配置。' 
-      }]);
+      setMessages(prev => {
+        const newMessages = [...prev];
+        // 移除那个还在加载的空消息
+        if (newMessages[newMessages.length - 1].content === '') {
+            newMessages.pop();
+        }
+        return [...newMessages, { 
+            id: Date.now().toString(), 
+            role: 'assistant', 
+            content: `⚠️ 连接错误: ${error instanceof Error ? error.message : '未知错误'}` 
+        }];
+      });
     } finally {
       setIsLoading(false);
     }
